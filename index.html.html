@@ -96,7 +96,7 @@
           </div>
           <div class="mb-4">
             <label for="itemImage" class="block text-gray-700 font-medium mb-2">Item Image</label>
-            <img id="imagePreview" src="https://placehold.co/300x200" alt="Preview of the found item - shows blank placeholder until user uploads actual image" class="mb-2 rounded-lg w-full h-48 object-cover">
+            <img id="imagePreview" src="https://placehold.co/300x200" alt="Preview of the found item" class="mb-2 rounded-lg w-full h-48 object-cover">
             <input type="file" id="itemImage" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
           </div>
           <div class="mb-4">
@@ -114,7 +114,7 @@
     <div class="container mx-auto px-4">
       <h2 class="text-2xl font-bold mb-8 text-center text-purple-700">Recently Found Items</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="itemsContainer">
-        <!-- Items will be inserted here by JavaScript -->
+        <p class="text-center col-span-3 text-gray-500">No items found. Be the first to report!</p>
       </div>
     </div>
   </section>
@@ -123,7 +123,7 @@
   <footer class="bg-purple-800 text-white py-8">
     <div class="container mx-auto px-4">
       <div class="text-center">
-        <p>© 2023 Campus Lost & Found. Helping reunite lost items with their owners.</p>
+        <p>© 2025 Campus Lost & Found. Helping reunite lost items with their owners.</p>
       </div>
     </div>
   </footer>
@@ -136,7 +136,6 @@
         <button id="closeCommentModal" class="text-gray-500 hover:text-gray-700">&times;</button>
       </div>
       <div id="commentsContainer" class="mb-4 max-h-64 overflow-y-auto">
-        <!-- Comments will be added here -->
       </div>
       <div class="border-t pt-4">
         <input type="text" id="newComment" placeholder="Add a comment..." class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2">
@@ -146,8 +145,8 @@
   </div>
 
   <script>
-    // Items list (start empty)
-    let items = JSON.parse(localStorage.getItem('lostAndFoundItems')) || [];
+    // Items list (start empty for GitHub Pages)
+    let items = [];
     let currentItemId = null;
 
     // DOM elements
@@ -166,31 +165,26 @@
     // Event Listeners
     itemForm.addEventListener('submit', handleItemSubmit);
     searchBtn.addEventListener('click', handleSearch);
-    searchInput.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') handleSearch();
-    });
+    searchInput.addEventListener('keyup', (e) => { if(e.key==='Enter') handleSearch(); });
     itemImageInput.addEventListener('change', handleImagePreview);
     closeCommentModal.addEventListener('click', () => commentModal.classList.add('hidden'));
 
-    // Initialize the app
+    // Initialize
     renderItems(items);
 
-    // Functions
-    function handleImagePreview(e) {
+    function handleImagePreview(e){
       const file = e.target.files[0];
-      if (file) {
+      if(file){
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function(e){
           imagePreview.src = e.target.result;
-          imagePreview.alt = "Preview of uploaded item image";
         }
         reader.readAsDataURL(file);
       }
     }
 
-    function handleItemSubmit(e) {
+    function handleItemSubmit(e){
       e.preventDefault();
-      
       const newItem = {
         id: Date.now(),
         name: document.getElementById('itemName').value,
@@ -202,50 +196,38 @@
         status: "not_found",
         comments: []
       };
-
       items.unshift(newItem);
-      saveItems();
       renderItems(items);
       itemForm.reset();
       imagePreview.src = "https://placehold.co/300x200";
-      
-      document.getElementById('items').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('items').scrollIntoView({behavior:'smooth'});
     }
 
-    function handleSearch() {
-      const searchTerm = searchInput.value.toLowerCase();
-      if (!searchTerm.trim()) {
-        renderItems(items);
-        return;
-      }
-      const filteredItems = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm) || 
-        item.description.toLowerCase().includes(searchTerm) ||
-        item.location.toLowerCase().includes(searchTerm)
-      );
-      renderItems(filteredItems);
+    function handleSearch(){
+      const term = searchInput.value.toLowerCase().trim();
+      if(!term){ renderItems(items); return; }
+      const filtered = items.filter(i => i.name.toLowerCase().includes(term) || i.description.toLowerCase().includes(term) || i.location.toLowerCase().includes(term));
+      renderItems(filtered);
     }
 
-    function renderItems(itemsToRender) {
+    function renderItems(list){
       itemsContainer.innerHTML = '';
-      
-      if (itemsToRender.length === 0) {
-        itemsContainer.innerHTML = '<p class="text-center col-span-3 text-gray-500">No items found. Be the first to report!</p>';
+      if(list.length===0){
+        itemsContainer.innerHTML='<p class="text-center col-span-3 text-gray-500">No items found. Be the first to report!</p>';
         return;
       }
-
-      itemsToRender.forEach(item => {
-        const itemElement = document.createElement('div');
-        itemElement.className = 'item-card bg-white rounded-lg shadow-md overflow-hidden';
-        itemElement.innerHTML = `
+      list.forEach(item=>{
+        const el=document.createElement('div');
+        el.className='item-card bg-white rounded-lg shadow-md overflow-hidden';
+        el.innerHTML=`
           <div class="h-48 overflow-hidden">
-            <img src="${item.image}" alt="Found item: ${item.name} - ${item.description}" class="w-full h-full object-cover">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
           </div>
           <div class="p-4">
             <div class="flex justify-between items-start mb-2">
               <h3 class="font-bold text-lg">${item.name}</h3>
-              <span class="text-xs px-2 py-1 rounded-full ${item.status === 'found' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'}">
-                ${item.status === 'found' ? 'Owner found!' : 'Not claimed'}
+              <span class="text-xs px-2 py-1 rounded-full ${item.status==='found'?'bg-green-100 text-green-800':'bg-purple-100 text-purple-800'}">
+                ${item.status==='found'?'Owner found!':'Not claimed'}
               </span>
             </div>
             <p class="text-gray-600 text-sm mb-2">${item.description}</p>
@@ -257,69 +239,50 @@
               <button class="comment-btn py-1 px-3 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200" data-id="${item.id}">
                 Comments (${item.comments.length})
               </button>
-              <button class="found-btn py-1 px-3 ${item.status === 'found' ? 'bg-green-500' : 'bg-purple-500'} text-white rounded text-xs hover:${item.status === 'found' ? 'bg-green-600' : 'bg-purple-600'}" data-id="${item.id}">
-                ${item.status === 'found' ? '✓ Found' : 'Mark Found'}
+              <button class="found-btn py-1 px-3 ${item.status==='found'?'bg-green-500 hover:bg-green-600':'bg-purple-500 hover:bg-purple-600'} text-white rounded text-xs" data-id="${item.id}">
+                ${item.status==='found'?'✓ Found':'Mark Found'}
               </button>
             </div>
           </div>
         `;
-        itemsContainer.appendChild(itemElement);
+        itemsContainer.appendChild(el);
       });
-
-      document.querySelectorAll('.comment-btn').forEach(btn => {
-        btn.addEventListener('click', openComments);
-      });
-      document.querySelectorAll('.found-btn').forEach(btn => {
-        btn.addEventListener('click', toggleFoundStatus);
-      });
+      document.querySelectorAll('.comment-btn').forEach(btn=>btn.addEventListener('click',openComments));
+      document.querySelectorAll('.found-btn').forEach(btn=>btn.addEventListener('click',toggleFoundStatus));
     }
 
-    function openComments(e) {
-      const itemId = parseInt(e.target.dataset.id);
-      const item = items.find(item => item.id === itemId);
-      currentItemId = itemId;
-      
-      commentsContainer.innerHTML = '';
-      if (item.comments.length === 0) {
-        commentsContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No comments yet</p>';
-      } else {
-        item.comments.forEach(comment => {
-          const commentElement = document.createElement('div');
-          commentElement.className = 'mb-3 pb-3 border-b border-gray-100';
-          commentElement.innerHTML = `
-            <p class="font-medium">${comment.user}</p>
-            <p class="text-gray-600">${comment.text}</p>
-          `;
-          commentsContainer.appendChild(commentElement);
+    function openComments(e){
+      const id=parseInt(e.target.dataset.id);
+      const item=items.find(i=>i.id===id);
+      currentItemId=id;
+      commentsContainer.innerHTML='';
+      if(item.comments.length===0){
+        commentsContainer.innerHTML='<p class="text-gray-500 text-center py-4">No comments yet</p>';
+      }else{
+        item.comments.forEach(c=>{
+          const ce=document.createElement('div');
+          ce.className='mb-3 pb-3 border-b border-gray-100';
+          ce.innerHTML=`<p class="font-medium">${c.user}</p><p class="text-gray-600">${c.text}</p>`;
+          commentsContainer.appendChild(ce);
         });
       }
-      
       commentModal.classList.remove('hidden');
     }
 
-    postComment.addEventListener('click', () => {
-      if (!newComment.value.trim()) return;
-      const item = items.find(item => item.id === currentItemId);
-      item.comments.push({
-        user: 'Anonymous',
-        text: newComment.value
-      });
-      saveItems();
-      newComment.value = '';
-      openComments({target: {dataset: {id: currentItemId}}});
+    postComment.addEventListener('click',()=>{
+      if(!newComment.value.trim()) return;
+      const item=items.find(i=>i.id===currentItemId);
+      item.comments.push({user:'Anonymous',text:newComment.value});
+      newComment.value='';
+      openComments({target:{dataset:{id:currentItemId}}});
       renderItems(items);
     });
 
-    function toggleFoundStatus(e) {
-      const itemId = parseInt(e.target.dataset.id);
-      const item = items.find(item => item.id === itemId);
-      item.status = item.status === 'found' ? 'not_found' : 'found';
-      saveItems();
+    function toggleFoundStatus(e){
+      const id=parseInt(e.target.dataset.id);
+      const item=items.find(i=>i.id===id);
+      item.status=item.status==='found'?'not_found':'found';
       renderItems(items);
-    }
-
-    function saveItems() {
-      localStorage.setItem('lostAndFoundItems', JSON.stringify(items));
     }
   </script>
 </body>
