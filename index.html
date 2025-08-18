@@ -41,6 +41,23 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .file-upload-btn:hover {
+            background-color: #f9fafb;
+        }
+        .file-upload-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+        .image-preview {
+            max-height: 200px;
+            width: auto;
+            display: none;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -104,17 +121,17 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                    <input type="text" id="itemName" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+                    <input type="text" id="itemName" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300" required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea id="itemDescription" rows="3" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <textarea id="itemDescription" rows="3" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300" required></textarea>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                     <select id="itemCategory" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300">
                         <option>Electronics</option>
                         <option>Books</option>
@@ -125,26 +142,22 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Lost Location</label>
-                    <input type="text" id="itemLocation" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lost Location *</label>
+                    <input type="text" id="itemLocation" class="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300" required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-orange-200 border-dashed rounded-lg">
-                        <div class="space-y-1 text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Photo *</label>
+                    <div class="mt-2">
+                        <input type="file" id="itemPhoto" accept="image/*" class="file-upload-input">
+                        <label for="itemPhoto" class="file-upload-btn flex flex-col items-center px-6 py-10 bg-white border-2 border-dashed border-orange-200 rounded-lg cursor-pointer hover:bg-orange-50 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            <div class="flex text-sm text-gray-600">
-                                <label for="itemPhoto" class="relative cursor-pointer bg-white rounded-md font-medium text-orange-500 hover:text-orange-600 focus-within:outline-none">
-                                    <span>Upload a file</span>
-                                    <input id="itemPhoto" type="file" class="sr-only">
-                                </label>
-                                <p class="pl-1">or drag and drop</p>
-                            </div>
-                            <p class="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-                        </div>
+                            <span class="mt-2 text-sm font-medium text-orange-500">Click to upload</span>
+                            <span class="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</span>
+                        </label>
+                        <img id="imagePreview" class="image-preview rounded-lg border border-orange-200" alt="Preview of uploaded image">
                     </div>
                 </div>
 
@@ -331,10 +344,13 @@
         const foundModal = document.getElementById('foundModal');
         const cancelFoundBtn = document.getElementById('cancelFoundBtn');
         const confirmFoundBtn = document.getElementById('confirmFoundBtn');
+        const itemPhotoInput = document.getElementById('itemPhoto');
+        const imagePreview = document.getElementById('imagePreview');
 
         // Current states
         let items = [...sampleItems];
         let currentSelectedItemId = null;
+        let selectedFile = null;
 
         // Initialize the app
         function init() {
@@ -384,6 +400,8 @@
             // New post modal
             newPostBtn.addEventListener('click', () => {
                 newPostModal.classList.remove('hidden');
+                imagePreview.style.display = 'none';
+                selectedFile = null;
             });
             
             closeModalBtn.addEventListener('click', () => {
@@ -394,29 +412,52 @@
                 newPostModal.classList.add('hidden');
             });
             
+            // Handle image selection
+            itemPhotoInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        selectedFile = e.target.result; // Store the image data
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
             submitPostBtn.addEventListener('click', () => {
+                const itemName = document.getElementById('itemName').value;
+                const itemDescription = document.getElementById('itemDescription').value;
+                const itemCategory = document.getElementById('itemCategory').value;
+                const itemLocation = document.getElementById('itemLocation').value;
+                
+                if (!itemName || !itemDescription || !itemLocation || !selectedFile) {
+                    alert('Please fill in all required fields and upload an image');
+                    return;
+                }
+                
                 const newItem = {
                     id: items.length + 1,
-                    name: document.getElementById('itemName').value,
-                    description: document.getElementById('itemDescription').value,
-                    category: document.getElementById('itemCategory').value,
-                    location: document.getElementById('itemLocation').value,
+                    name: itemName,
+                    description: itemDescription,
+                    category: itemCategory,
+                    location: itemLocation,
                     date: 'Just now',
-                    image: 'https://placehold.co/600x400/orange/white?text=' + encodeURIComponent(document.getElementById('itemName').value),
+                    image: selectedFile, // Use the uploaded image data
                     status: 'lost',
                     comments: []
                 };
                 
-                if (newItem.name && newItem.description && newItem.location) {
-                    items.unshift(newItem);
-                    renderItems();
-                    document.getElementById('itemName').value = '';
-                    document.getElementById('itemDescription').value = '';
-                    document.getElementById('itemLocation').value = '';
-                    newPostModal.classList.add('hidden');
-                } else {
-                    alert('Please fill in all required fields');
-                }
+                items.unshift(newItem);
+                renderItems();
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemDescription').value = '';
+                document.getElementById('itemLocation').value = '';
+                imagePreview.style.display = 'none';
+                itemPhotoInput.value = '';
+                selectedFile = null;
+                newPostModal.classList.add('hidden');
             });
 
             // Item modal
