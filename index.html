@@ -7,11 +7,18 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Nunito', sans-serif; background: #fef9f9; }
-    .card { transition: transform 0.2s; }
-    .card:hover { transform: scale(1.03); }
+    body { font-family: 'Nunito', sans-serif; background: #fdf6f9; }
+    .card {
+      transition: transform 0.3s, box-shadow 0.3s;
+      perspective: 1000px;
+    }
+    .card:hover {
+      transform: rotateY(10deg) rotateX(5deg) scale(1.05);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
     .status-found { color: #16a34a; font-weight: bold; }
     .status-lost { color: #dc2626; font-weight: bold; }
+    input[type="file"] { border: 1px solid #ddd; border-radius: 0.5rem; padding: 0.4rem; width: 100%; }
   </style>
 </head>
 <body class="p-6">
@@ -23,7 +30,7 @@
     <form id="itemForm" class="space-y-4">
       <input type="text" id="itemName" placeholder="Item Name" class="w-full p-2 border rounded-lg" required>
       <input type="text" id="itemDesc" placeholder="Description" class="w-full p-2 border rounded-lg" required>
-      <input type="url" id="itemImg" placeholder="Image URL" class="w-full p-2 border rounded-lg" required>
+      <input type="file" id="itemImg" accept="image/*" required>
       <select id="itemStatus" class="w-full p-2 border rounded-lg">
         <option value="lost">Lost</option>
         <option value="found">Found</option>
@@ -42,20 +49,32 @@
 
     itemForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const newItem = {
-        name: document.getElementById('itemName').value,
-        desc: document.getElementById('itemDesc').value,
-        img: document.getElementById('itemImg').value,
-        status: document.getElementById('itemStatus').value,
-        comments: []
-      };
-      items.push(newItem);
-      renderItems();
-      itemForm.reset();
+      const fileInput = document.getElementById('itemImg');
+      const reader = new FileReader();
+
+      reader.onload = function() {
+        const newItem = {
+          name: document.getElementById('itemName').value,
+          desc: document.getElementById('itemDesc').value,
+          img: reader.result, // local image as base64
+          status: document.getElementById('itemStatus').value,
+          comments: []
+        };
+        items.push(newItem);
+        renderItems();
+        itemForm.reset();
+      }
+
+      if(fileInput.files[0]) reader.readAsDataURL(fileInput.files[0]);
     });
 
     function renderItems() {
       itemsContainer.innerHTML = '';
+      if(items.length === 0){
+        itemsContainer.innerHTML = '<p class="text-gray-500 text-center text-lg">No items yet!</p>';
+        return;
+      }
+
       items.forEach((item, index) => {
         const itemCard = document.createElement('div');
         itemCard.classList.add('card', 'bg-white', 'rounded-2xl', 'shadow-lg', 'p-4', 'flex', 'flex-col');
@@ -63,7 +82,9 @@
           <img src="${item.img}" alt="${item.name}" class="rounded-xl mb-4 object-cover h-48 w-full">
           <h3 class="text-xl font-bold text-purple-600">${item.name}</h3>
           <p class="mb-2">${item.desc}</p>
-          <p class="${item.status === 'found' ? 'status-found' : 'status-lost'} mb-2">${item.status === 'found' ? 'Owner Found' : 'Lost'}</p>
+          <p class="${item.status === 'found' ? 'status-found' : 'status-lost'} mb-2">
+            ${item.status === 'found' ? 'Owner Found' : 'Lost'}
+          </p>
           <div class="mb-2">
             <input type="text" placeholder="Add comment" class="w-full p-2 border rounded-lg mb-2 comment-input-${index}">
             <button class="bg-purple-400 hover:bg-purple-500 text-white p-1 rounded-lg w-full" onclick="addComment(${index})">Comment</button>
@@ -94,6 +115,8 @@
         commentsDiv.appendChild(commentP);
       });
     }
+
+    renderItems();
   </script>
 </body>
 </html>
