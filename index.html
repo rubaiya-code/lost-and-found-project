@@ -240,7 +240,7 @@
 
     <footer class="bg-gray-100 py-8 mt-12">
         <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
-            <p>LOST & FOUND - Helping lost items find their way home since 2023</p>
+            <p>Paws & Find - Helping lost items find their way home since 2023</p>
             <p class="mt-2">Made with ❤️ for campus community</p>
         </div>
     </footer>
@@ -294,4 +294,270 @@
                 location: "Sports Complex",
                 date: "3 days ago",
                 image: "https://placehold.co/600x400/f5f0e6/78350f?text=Leather+Wallet",
-                status
+                status: "found",
+                comments: []
+            },
+            {
+                id: 5,
+                name: "Silver Bracelet",
+                description: "Lost my grandmother's silver bracelet with flower engravings on the campus lawn.",
+                category: "Accessories",
+                location: "Central Lawn",
+                date: "4 days ago",
+                image: "https://placehold.co/600x400/f0fdf4/166534?text=Silver+Bracelet",
+                status: "found",
+                comments: [
+                    { user: "Sarah", text: "This was handed in to security office yesterday!" }
+                ]
+            },
+            {
+                id: 6,
+                name: "Smart Watch",
+                description: "Lost my Samsung Galaxy Watch near the bus stop.",
+                category: "Electronics",
+                location: "North Campus Bus Stop",
+                date: "1 week ago",
+                image: "https://placehold.co/600x400/eff6ff/1d4ed8?text=Smart+Watch",
+                status: "lost",
+                comments: []
+            }
+        ];
+
+        // DOM Elements
+        const itemsGrid = document.getElementById('itemsGrid');
+        const newPostBtn = document.getElementById('newPostBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelPostBtn = document.getElementById('cancelPostBtn');
+        const submitPostBtn = document.getElementById('submitPostBtn');
+        const newPostModal = document.getElementById('newPostModal');
+        const itemModal = document.getElementById('itemModal');
+        const closeItemModalBtn = document.getElementById('closeItemModalBtn');
+        const modalItemName = document.getElementById('modalItemName');
+        const modalItemImage = document.getElementById('modalItemImage');
+        const modalItemDescription = document.getElementById('modalItemDescription');
+        const modalItemLocation = document.getElementById('modalItemLocation');
+        const modalItemDate = document.getElementById('modalItemDate');
+        const commentsContainer = document.getElementById('commentsContainer');
+        const newCommentInput = document.getElementById('newCommentInput');
+        const postCommentBtn = document.getElementById('postCommentBtn');
+        const markFoundBtn = document.getElementById('markFoundBtn');
+        const foundModal = document.getElementById('foundModal');
+        const cancelFoundBtn = document.getElementById('cancelFoundBtn');
+        const confirmFoundBtn = document.getElementById('confirmFoundBtn');
+        const itemPhotoInput = document.getElementById('itemPhoto');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // Current states
+        let items = [...sampleItems];
+        let currentSelectedItemId = null;
+        let selectedFile = null;
+
+        // Initialize the app
+        function init() {
+            renderItems();
+            setupEventListeners();
+        }
+
+        // Render items to the grid
+        function renderItems() {
+            itemsGrid.innerHTML = '';
+            
+            items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'card bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transition';
+                itemElement.innerHTML = `
+                    <div class="relative">
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover">
+                        <div class="absolute top-2 left-2">
+                            <span class="item-tag ${item.status === 'lost' ? 'lost' : 'found'}">
+                                ${item.status === 'lost' ? 'LOST' : 'FOUND'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mb-2 line-clamp-1">${item.description}</p>
+                        <div class="flex justify-between items-center text-xs text-gray-500">
+                            <span><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>${item.location}</span>
+                            <span>${item.date}</span>
+                        </div>
+                    </div>
+                `;
+                
+                itemElement.addEventListener('click', () => {
+                    openItemModal(item.id);
+                });
+                
+                itemsGrid.appendChild(itemElement);
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // New post modal
+            newPostBtn.addEventListener('click', () => {
+                newPostModal.classList.remove('hidden');
+                imagePreview.style.display = 'none';
+                selectedFile = null;
+            });
+            
+            closeModalBtn.addEventListener('click', () => {
+                newPostModal.classList.add('hidden');
+            });
+            
+            cancelPostBtn.addEventListener('click', () => {
+                newPostModal.classList.add('hidden');
+            });
+            
+            // Handle image selection
+            itemPhotoInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                        selectedFile = e.target.result; // Store the image data
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            submitPostBtn.addEventListener('click', () => {
+                const itemName = document.getElementById('itemName').value;
+                const itemDescription = document.getElementById('itemDescription').value;
+                const itemCategory = document.getElementById('itemCategory').value;
+                const itemLocation = document.getElementById('itemLocation').value;
+                
+                if (!itemName || !itemDescription || !itemLocation || !selectedFile) {
+                    alert('Please fill in all required fields and upload an image');
+                    return;
+                }
+                
+                const newItem = {
+                    id: items.length + 1,
+                    name: itemName,
+                    description: itemDescription,
+                    category: itemCategory,
+                    location: itemLocation,
+                    date: 'Just now',
+                    image: selectedFile, // Use the uploaded image data
+                    status: 'lost',
+                    comments: []
+                };
+                
+                items.unshift(newItem);
+                renderItems();
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemDescription').value = '';
+                document.getElementById('itemLocation').value = '';
+                imagePreview.style.display = 'none';
+                itemPhotoInput.value = '';
+                selectedFile = null;
+                newPostModal.classList.add('hidden');
+            });
+
+            // Item modal
+            closeItemModalBtn.addEventListener('click', () => {
+                itemModal.classList.add('hidden');
+            });
+            
+            postCommentBtn.addEventListener('click', () => {
+                const commentText = newCommentInput.value.trim();
+                if (commentText && currentSelectedItemId) {
+                    const itemIndex = items.findIndex(item => item.id === currentSelectedItemId);
+                    if (itemIndex !== -1) {
+                        items[itemIndex].comments.push({
+                            user: 'You',
+                            text: commentText
+                        });
+                        renderItemComments();
+                        newCommentInput.value = '';
+                    }
+                }
+            });
+            
+            markFoundBtn.addEventListener('click', () => {
+                foundModal.classList.remove('hidden');
+            });
+            
+            cancelFoundBtn.addEventListener('click', () => {
+                foundModal.classList.add('hidden');
+            });
+            
+            confirmFoundBtn.addEventListener('click', () => {
+                if (currentSelectedItemId) {
+                    const itemIndex = items.findIndex(item => item.id === currentSelectedItemId);
+                    if (itemIndex !== -1) {
+                        items[itemIndex].status = 'found';
+                        renderItems();
+                        itemModal.classList.add('hidden');
+                        foundModal.classList.add('hidden');
+                    }
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!newPostModal.classList.contains('hidden')) {
+                        newPostModal.classList.add('hidden');
+                    }
+                    if (!itemModal.classList.contains('hidden')) {
+                        itemModal.classList.add('hidden');
+                    }
+                    if (!foundModal.classList.contains('hidden')) {
+                        foundModal.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // Open item modal
+        function openItemModal(itemId) {
+            const item = items.find(item => item.id === itemId);
+            if (item) {
+                currentSelectedItemId = item.id;
+                modalItemName.textContent = item.name;
+                modalItemImage.src = item.image;
+                modalItemImage.alt = item.name;
+                modalItemDescription.textContent = item.description;
+                modalItemLocation.textContent = item.location;
+                modalItemDate.textContent = item.date;
+                
+                if (item.status === 'found') {
+                    document.getElementById('markFoundBtn').classList.add('hidden');
+                } else {
+                    document.getElementById('markFoundBtn').classList.remove('hidden');
+                }
+                
+                renderItemComments();
+                itemModal.classList.remove('hidden');
+            }
+        }
+
+        // Render item comments
+        function renderItemComments() {
+            commentsContainer.innerHTML = '';
+            const item = items.find(item => item.id === currentSelectedItemId);
+            
+            if (item && item.comments) {
+                item.comments.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment-item bg-gray-50 p-3 rounded-lg';
+                    commentElement.innerHTML = `
+                        <p class="font-medium text-sm text-gray-700">${comment.user}</p>
+                        <p class="text-gray-600 text-sm">${comment.text}</p>
+                    `;
+                    commentsContainer.appendChild(commentElement);
+                });
+            }
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
